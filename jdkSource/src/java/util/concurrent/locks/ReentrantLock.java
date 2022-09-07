@@ -1,6 +1,6 @@
 /*
  * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
- *
+ *zc测试
  *
  *
  *
@@ -129,30 +129,30 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         final boolean nonfairTryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
             int c = getState();
-            if (c == 0) {
+            if (c == 0) {//如果锁被释放,则再次尝试加锁
                 if (compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {
+            else if (current == getExclusiveOwnerThread()) {//可重入锁实现
                 int nextc = c + acquires;
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
-                setState(nextc);
+                setState(nextc);//设置state状态+1
                 return true;
             }
             return false;
         }
 
         protected final boolean tryRelease(int releases) {
-            int c = getState() - releases;
-            if (Thread.currentThread() != getExclusiveOwnerThread())
+            int c = getState() - releases;//解锁state-1
+            if (Thread.currentThread() != getExclusiveOwnerThread())//解锁不是当前占有线程抛异常
                 throw new IllegalMonitorStateException();
             boolean free = false;
-            if (c == 0) {
+            if (c == 0) {//如果解锁后state为0
                 free = true;
-                setExclusiveOwnerThread(null);
+                setExclusiveOwnerThread(null);//释放线程占有
             }
             setState(c);
             return free;
@@ -203,10 +203,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * acquire on failure.
          */
         final void lock() {
-            if (compareAndSetState(0, 1))
-                setExclusiveOwnerThread(Thread.currentThread());
+            if (compareAndSetState(0, 1))//非公平锁抢锁 将初始值0修改为1成功则获取到锁
+                setExclusiveOwnerThread(Thread.currentThread());//设置被当前线程占有
             else
-                acquire(1);
+                acquire(1);//抢锁失败入队-阻塞
         }
 
         protected final boolean tryAcquire(int acquires) {
@@ -232,7 +232,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() &&
+                if (!hasQueuedPredecessors() &&//队列是否有线程等待
                     compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
