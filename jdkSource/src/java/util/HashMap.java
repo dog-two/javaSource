@@ -472,7 +472,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Constructs an empty <tt>HashMap</tt> with the default initial capacity
      * (16) and the default load factor (0.75).
      */
-    public HashMap() {
+    public HashMap() {//new HashMap不会进行初始化操作,调用put方法会进行初始化操作
         this.loadFactor = DEFAULT_LOAD_FACTOR; // all other fields defaulted
     }
 
@@ -625,37 +625,37 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final V putVal(int hash, K key, V value, boolean onlyIfAbsent,
                    boolean evict) {
         Node<K,V>[] tab; Node<K,V> p; int n, i;
-        if ((tab = table) == null || (n = tab.length) == 0)
-            n = (tab = resize()).length;
-        if ((p = tab[i = (n - 1) & hash]) == null)
-            tab[i] = newNode(hash, key, value, null);
-        else {
+        if ((tab = table) == null || (n = tab.length) == 0)//hash表是否初始化
+            n = (tab = resize()).length;//初始化或原长度为0扩容
+        if ((p = tab[i = (n - 1) & hash]) == null)//hash定位key存储的索引位置为空
+            tab[i] = newNode(hash, key, value, null);//创建节点放入此索引位置
+        else {//不为空 hash冲突
             Node<K,V> e; K k;
             if (p.hash == hash &&
                 ((k = p.key) == key || (key != null && key.equals(k))))
-                e = p;
-            else if (p instanceof TreeNode)
-                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-            else {
+                e = p;//key的hash值和内容相同
+            else if (p instanceof TreeNode)//是否树化
+                e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);//红黑树插入节点
+            else {//遍历链表 尾插逻辑
                 for (int binCount = 0; ; ++binCount) {
-                    if ((e = p.next) == null) {
+                    if ((e = p.next) == null) {//将要插入的链表位置
                         p.next = newNode(hash, key, value, null);
-                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-                            treeifyBin(tab, hash);
+                        if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st 链表长度大于等于7转红黑树
+                            treeifyBin(tab, hash);//链表树化
                         break;
                     }
                     if (e.hash == hash &&
                         ((k = e.key) == key || (key != null && key.equals(k))))
-                        break;
+                        break;//跳过执行下面的value覆盖逻辑
                     p = e;
                 }
             }
-            if (e != null) { // existing mapping for key
+            if (e != null) { // existing mapping for key 存在相同的key
                 V oldValue = e.value;
-                if (!onlyIfAbsent || oldValue == null)
-                    e.value = value;
+                if (!onlyIfAbsent || oldValue == null)//onlyIfAbsent 为true 指key存在的时候不覆盖value值
+                    e.value = value;//key相同value覆盖
                 afterNodeAccess(e);
-                return oldValue;
+                return oldValue;//newValue覆盖会返回老的value
             }
         }
         ++modCount;
@@ -677,7 +677,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     final Node<K,V>[] resize() {
         Node<K,V>[] oldTab = table;
         int oldCap = (oldTab == null) ? 0 : oldTab.length;
-        int oldThr = threshold;
+        int oldThr = threshold;//扩容阈值
         int newCap, newThr = 0;
         if (oldCap > 0) {
             if (oldCap >= MAXIMUM_CAPACITY) {
@@ -690,7 +690,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         }
         else if (oldThr > 0) // initial capacity was placed in threshold
             newCap = oldThr;
-        else {               // zero initial threshold signifies using defaults
+        else {               // zero initial threshold signifies using defaults 初始化扩容
             newCap = DEFAULT_INITIAL_CAPACITY;
             newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
         }
@@ -756,8 +756,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>
         int n, index; Node<K,V> e;
         if (tab == null || (n = tab.length) < MIN_TREEIFY_CAPACITY)
             resize();
-        else if ((e = tab[index = (n - 1) & hash]) != null) {
-            TreeNode<K,V> hd = null, tl = null;
+        else if ((e = tab[index = (n - 1) & hash]) != null) {//树化hash表长度>=64链表不能为空
+            TreeNode<K,V> hd = null, tl = null;//构建红黑树
             do {
                 TreeNode<K,V> p = replacementTreeNode(e, null);
                 if (tl == null)
@@ -1058,7 +1058,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     @Override
-    public V putIfAbsent(K key, V value) {
+    public V putIfAbsent(K key, V value) {//传入key对应的value已经存在，就返回存在的value，不进行替换。如果不存在，就添加key和value，返回null
         return putVal(hash(key), key, value, true, true);
     }
 
